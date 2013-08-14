@@ -1,0 +1,85 @@
+
+
+create table trip_data (Duration text,Start_time text,Start_Station text,Start_terminal integer,End_date text,End_Station text, End_terminal integer, Bike_num text, Subscription_Type text);
+.separator ","
+.import 2013-2nd-quarter.csv trip_data
+delete from trip_data where Duration='Duration';
+.headers ON
+
+create view bike_stats as select Bike_num, min(date(Start_time)) first_service_day, max(date(Start_time)) last_service_day, count(distinct date(Start_time)) days_in_service, (julianday(max(date(Start_time))) - julianday(min(date(Start_time))))+1-count(distinct date(Start_time)) days_not_in_service, count(start_time) trips, count(case when Subscription_type like('Subscriber') then start_time else null end) subscriber_trips from trip_data group by 1 limit 20;
+
+create view start_station_stats as select Start_Station, Start_terminal, count(1) as trips_started, count( case when Subscription_Type="Subscriber" then 1 else null end) subscriber_trips_started, count( case when Subscription_Type="Casual" then 1 else null end) casual_trips_started  from trip_data group by 1,2 ;
+
+create view end_station_stats as select End_Station, End_terminal, count(1) as trips_ended, count( case when Subscription_Type="Subscriber" then 1 else null end) subscriber_trips_ended, count( case when Subscription_Type="Casual" then 1 else null end) casual_trips_ended  from trip_data group by 1,2 ;
+
+
+create table stations (name text, terminalname integer, lat real, long real);
+.separator ","
+.import capital_station_locations.csv stations
+delete from stations where name=’name’;
+
+create view station_stats as
+select
+
+Start_Station station, Start_terminal terminal, trips_started, subscriber_trips_started, casual_trips_started, trips_ended, subscriber_trips_ended, casual_trips_ended
+from start_station_stats a 
+join end_station_stats b
+on a.Start_terminal=b.End_terminal
+join 
+
+
+select * from trip_data a join trip_data b on Start_terminal = End_terminal;
+
+
+
+select (strftime('%s',end_date)-strftime('%s',start_time))/60, count(1) from trip_data group by 1 limit 50;
+
+
+
+create view pairwise_trips as 
+select start_terminal, 
+end_terminal, 
+start_terminal || end_terminal pathname, 
+start.lat start_lat,
+ start.long start_long, 
+end.lat end_lat,
+end.long end_long,
+count(1) trips
+from trip_data td 
+join stations start on td.start_terminal = start.terminalname 
+join stations end on end_terminal = end.terminalname
+group by 1,2,3,4,5,6,7;
+
+
+
+.mode csv
+.output out.csv
+
+select start_terminal terminal, pathname, '1' pathorder, start_lat lat, start_long long, trips from pairwise_trips
+UNION
+select end_terminal terminal, pathname, '2' pathorder, end_lat lat, end_long long, trips from pairwise_trips;
+
+
+
+
+
+
+
+
+import bs4
+ f=open('bikeStations.xml','r')
+x =bs4.BeautifulSoup(f)
+
+table = []
+table.append(['name','terminalname','lat','long'])
+for e in x('station'):
+    table.append([e('name')[0].text,e.terminalname.text,e.lat.text,e.long.text])
+
+import csv
+f= open('capital_station_locations.csv','wb'
+writer = csv.writer(f)
+writer.writerows(table)
+
+
+
+http://kb.tableausoftware.com/articles/knowledgebase/using-path-shelf-pattern-analysis
