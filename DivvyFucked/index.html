@@ -30,9 +30,9 @@
   
      var taxiDistance = function(pointA, pointB){
       return (
-        haversine({'latitude':pointA.latitude  ,'longitude':pointA.longitude},
+        haversineDistance({'latitude':pointA.latitude  ,'longitude':pointA.longitude},
         {'latitude':pointA.latitude  ,'longitude':pointB.longitude}) +
-        haversine({'latitude':pointA.latitude  ,'longitude':pointB.longitude},
+        haversineDistance({'latitude':pointA.latitude  ,'longitude':pointB.longitude},
         {'latitude':pointB.latitude  ,'longitude':pointB.longitude})
         )
     }; 
