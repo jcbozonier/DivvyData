@@ -82,7 +82,7 @@
         for(var index_to_clear in grid){
           $('#' + index_to_clear).empty();
         }
-        
+
         for(var direction_index in grid){
           grid[direction_index].sort(function(a,b){
             return a.distance - b.distance;
@@ -90,14 +90,14 @@
           for(var station_index in grid[direction_index]){
             var station = grid[direction_index][station_index];
             if(station.bikesAvailable && station.spaceAvailable){
-              $("#"+station.direction).append("<li style='color:black;'>" + station.distance + " " + station.name + "</li>");
+              $("#"+station.direction).append("<li style='color:black;'>+ " + station.distance + " " + station.name + "</li>");
               continue;
             }
             if(station.bikesAvailable){
-              $("#"+station.direction).append("<li style='color:green;'>" + station.distance + " " + station.name + "</li>");
+              $("#"+station.direction).append("<li style='color:green;'>|||" + station.distance + " " + station.name + "</li>");
             }
             if(station.spaceAvailable){
-              $("#"+station.direction).append("<li style='color:blue;'>" + station.distance + " " + station.name + "</li>")
+              $("#"+station.direction).append("<li style='color:blue;'>_&nbsp;" + station.distance + " " + station.name + "</li>")
             }
           }
         }
@@ -118,6 +118,9 @@
     body{
       font-family: arial;
       font-size:12pt;
+    }
+    ul{
+      list-style-type: none;
     }
   </style>
 </head>
