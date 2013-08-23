@@ -23,13 +23,18 @@
       return R * c;
     };
 
-    var euclideanDistance = function(pointA, pointB){
+    /*var euclideanDistance = function(pointA, pointB){
       return Math.sqrt(Math.pow(pointB.latitude - pointA.latitude, 2) + Math.pow(pointB.longitude - pointA.longitude, 2))
-    };
+    };*/
+
+    var taxiDistance = function(pointA, pointB){
+      return (Math.abs(pointB.latitude - pointA.latitude) + Math.abs(pointB.longitude - pointA.longitude))
+    }; 
 
     var compromiseDistance = function(pointA, pointB){
-      return (haversineDistance(pointA, pointB) + euclideanDistance(pointA, pointB))/2
+      return (haversineDistance(pointA, pointB) + taxiDistance(pointA, pointB))/2
     };
+
     var relativeLocation = function(anchorLocation, otherPoint){
       return {
         'latitude': otherPoint.latitude - anchorLocation.latitude,
