@@ -1,0 +1,64 @@
+<html>
+<head>
+  <title>DivvyFucked</title>
+  <script src="./jquery.js"></script>
+  <script>
+    var to_radians = function(number){
+      return number * Math.PI / 180;
+    };
+    var haversineDistance = function(pointA, pointB){
+      var lat1 = pointA.latitude;
+      var lon1 = pointA.longitude;
+      var lat2 = pointB.latitude;
+      var lon2 = pointB.longitude;
+      var R = 3959;
+      // In miles
+      var dLat = to_radians(lat2 - lat1);
+      var dLon = to_radians(lon2 - lon1);
+      lat1 = to_radians(lat1);
+      lat2 = to_radians(lat2);
+
+      var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+      var c = 2 * Math.asin(Math.sqrt(a));
+      return R * c;
+    };
+
+    var euclideanDistance = function(pointA, pointB){
+      return Math.sqrt(Math.pow(pointB.latitude - pointA.latitude, 2) + Math.pow(pointB.longitude - pointA.longitude, 2))
+    };
+
+    var compromiseDistance = function(pointA, pointB){
+      return (haversineDistance(pointA, pointB) + euclideanDistance(pointA, pointB))/2
+    };
+
+    var LoadLocation = function(fn){
+      navigator.geolocation.getCurrentPosition(function(location){
+        fn({'latitude': location.coords.latitude, 'longitude':location.coords.longitude});
+      },
+      function(err){
+        var a=err;
+      });
+    };
+    var LoadStations = function(current_location){
+      $('#output').prepend("Current location: " + current_location.latitude + ', ' + current_location.longitude);
+      $.getJSON('http://anyorigin.com/get?url=http%3A//divvybikes.com/stations/json&callback=?', function(data)
+      {
+        divvy_data = data.contents;
+        for(var index in divvy_data.stationBeanList){
+          var station = divvy_data.stationBeanList[index];
+          var distance = compromiseDistance(current_location, station);
+          $('#output ul').append("<li>Name: " + station.stationName + "; Distance: " + distance + "</li>");
+        }
+      });
+    };
+    LoadLocation(LoadStations);
+    //LoadStations();
+  </script>
+</head>
+<body>
+  <h1>Don't be DivvyFucked!</h1>
+  <div id="output">
+    <ul></ul>
+  </div>
+</body>
+</html>
