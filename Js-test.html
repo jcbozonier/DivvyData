@@ -13,7 +13,7 @@ document.write("Hello g ");
 var request = new XMLHttpRequest();
 request.open('GET','https://divvybikes.com/stations/json');
 j=JSON.parse(request.responseText);
-document.write(j);
+document.write(j.result[0]);
 document.write(request);
 </script>
 
