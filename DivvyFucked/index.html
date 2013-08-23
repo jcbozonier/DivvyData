@@ -27,9 +27,16 @@
       return Math.sqrt(Math.pow(pointB.latitude - pointA.latitude, 2) + Math.pow(pointB.longitude - pointA.longitude, 2))
     };*/
 
-    var taxiDistance = function(pointA, pointB){
-      return (Math.abs(pointB.latitude - pointA.latitude) + Math.abs(pointB.longitude - pointA.longitude))
+  
+     var taxiDistance = function(pointA, pointB){
+      return (
+        haversine({'latitude':pointA.latitude  ,'longitude':pointA.longitude},
+        {'latitude':pointA.latitude  ,'longitude':pointB.longitude}) +
+        haversine({'latitude':pointA.latitude  ,'longitude':pointB.longitude},
+        {'latitude':pointB.latitude  ,'longitude':pointB.longitude})
+        )
     }; 
+    
 
     var compromiseDistance = function(pointA, pointB){
       return (haversineDistance(pointA, pointB) + taxiDistance(pointA, pointB))/2
