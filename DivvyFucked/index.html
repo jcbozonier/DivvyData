@@ -30,6 +30,19 @@
     var compromiseDistance = function(pointA, pointB){
       return (haversineDistance(pointA, pointB) + euclideanDistance(pointA, pointB))/2
     };
+    var relativeLocation = function(anchorLocation, otherPoint){
+      return {
+        'latitude': otherPoint.latitude - anchorLocation.latitude,
+        'longitude': otherPoint.longitude - anchorLocation.longitude
+      };
+    };
+
+    var find_direction = function(current_location, station){
+      var updated_location = relativeLocation(current_location, station);
+      var horizontal_direction = updated_location.longitude > 0 ? 'east' : 'west';
+      var vertical_direction = updated_location.latitude < 0 ? 'south' : 'north';
+      return vertical_direction + horizontal_direction;
+    };
 
     var LoadLocation = function(fn){
       navigator.geolocation.getCurrentPosition(function(location){
@@ -40,25 +53,86 @@
       });
     };
     var LoadStations = function(current_location){
-      $('#output').prepend("Current location: " + current_location.latitude + ', ' + current_location.longitude);
+      var grid = {
+        'northeast':[],
+        'northwest':[],
+        'southeast':[],
+        'southwest':[]
+      };
+
+      $('#output #status').empty();
+
+      $('#output #status').append("Current location: " + current_location.latitude + ', ' + current_location.longitude);
       $.getJSON('http://anyorigin.com/get?url=http%3A//divvybikes.com/stations/json&callback=?', function(data)
       {
         divvy_data = data.contents;
         for(var index in divvy_data.stationBeanList){
           var station = divvy_data.stationBeanList[index];
           var distance = compromiseDistance(current_location, station);
-          $('#output ul').append("<li>Name: " + station.stationName + "; Distance: " + distance + "</li>");
+          var station_direction = find_direction(current_location, station);
+          grid[station_direction].push({
+            'name': station.stationName,
+            'direction': station_direction,
+            'distance': Math.floor(100*distance,0)/100,
+            'bikesAvailable': station.availableBikes > 0,
+            'spaceAvailable': station.availableDocks > 0,
+          });
+          //$('#output ul').append("<li>Name: " + station.stationName + "; Distance: " + distance + "<br />(" + station_direction + ")</li>");
         }
+        for(var index_to_clear in grid){
+          $('#' + index_to_clear).empty();
+        }
+        
+        for(var direction_index in grid){
+          grid[direction_index].sort(function(a,b){
+            return a.distance - b.distance;
+          });
+          for(var station_index in grid[direction_index]){
+            var station = grid[direction_index][station_index];
+            if(station.bikesAvailable && station.spaceAvailable){
+              $("#"+station.direction).append("<li style='color:black;'>" + station.distance + " " + station.name + "</li>");
+              continue;
+            }
+            if(station.bikesAvailable){
+              $("#"+station.direction).append("<li style='color:green;'>" + station.distance + " " + station.name + "</li>");
+            }
+            if(station.spaceAvailable){
+              $("#"+station.direction).append("<li style='color:blue;'>" + station.distance + " " + station.name + "</li>")
+            }
+          }
+        }
+
       });
     };
-    LoadLocation(LoadStations);
+    
+    LoadLocation(function(location){
+      LoadStations(location);
+      window.setInterval(function(){
+        LoadStations(location);
+      }, 60000);
+    });
     //LoadStations();
+
   </script>
+  <style type='text/css'>
+    body{
+      font-family: arial;
+      font-size:12pt;
+    }
+  </style>
 </head>
 <body>
   <h1>Don't be DivvyFucked!</h1>
   <div id="output">
-    <ul></ul>
+    <span id="status"></span>
+    <h3>Northwest</h3>
+    <ul id='northwest'></ul>
+    <h3>Southwest</h3>
+    <ul id='southwest'></ul>
+    <h3>Northeast</h3>
+    <ul id='northeast'></ul>
+    <h3>Southeast</h3>
+    <ul id='southeast'></ul>
   </div>
 </body>
 </html>
