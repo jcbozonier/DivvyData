@@ -116,14 +116,14 @@
 
       });
     };
-    
     LoadLocation(function(location){
-      LoadStations(location);
-      window.setInterval(function(){
-        LoadStations(location);
-      }, 60000);
-    });
-    //LoadStations();
+          LoadStations(location);
+      });
+    window.setInterval(function(){
+      LoadLocation(function(location){
+          LoadStations(location);
+      });
+    }, 60000);
 
   </script>
   <style type='text/css'>
