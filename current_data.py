@@ -16,5 +16,6 @@ while True:
 		else:
 			print "File already exists. Sleeping"
 	except:
-		continue 
+		 time.sleep(3)
+		 continue
 	time.sleep(30)
