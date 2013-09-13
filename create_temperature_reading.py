@@ -6,7 +6,6 @@ import csv
 #'2013-08-18 11:55:01 PM'
 
 # station_id, group_id, hour, minute, weekend, day_of_week, available_bike_count, available_dock_count
-station_entries = []
 station_temperatures = {}
 for file_path in glob.glob("LargeDivvySample/*.json"):
 	json_file = open(file_path)
