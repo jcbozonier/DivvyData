@@ -2,6 +2,8 @@ import urllib
 import datetime
 import os
 import time
+import socket 
+socket.setdefaulttimeout(20)
 
 while True:
 	current_file_name = datetime.datetime.now().strftime('%Y%m%d_%H%M') + '.json'
