@@ -1,0 +1,132 @@
+<head>
+ <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
+ <script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script> 
+  <script src="./jquery.js"></script>
+</head>
+
+<style type="text/css">
+
+</style>
+<body>
+ <div id="map" style="height:100%"></div>
+
+<script>
+/*function httpGet(theUrl)
+{
+
+var xmlHttp = null;
+xmlHttp = new XMLHttpRequest();
+xmlHttp.open( "GET", theUrl,false );
+//xmlHttp.send( null );
+return xmlHttp.responseText;
+}*/
+var to_radians = function(number){
+      return number * Math.PI / 180;
+    };
+var haversineDistance = function(pointA, pointB){
+  var lat1 = pointA.latitude;
+  var lon1 = pointA.longitude;
+  var lat2 = pointB.latitude;
+  var lon2 = pointB.longitude;
+  var R = 3959;
+  // In miles
+  var dLat = to_radians(lat2 - lat1);
+  var dLon = to_radians(lon2 - lon1);
+  lat1 = to_radians(lat1);
+  lat2 = to_radians(lat2);
+
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+  var c = 2 * Math.asin(Math.sqrt(a));
+  return R * c;
+};
+
+ var taxiDistance = function(pointA, pointB){
+  return (
+    haversineDistance({'latitude':pointA.latitude  ,'longitude':pointA.longitude},
+    {'latitude':pointA.latitude  ,'longitude':pointB.longitude}) +
+    haversineDistance({'latitude':pointA.latitude  ,'longitude':pointB.longitude},
+    {'latitude':pointB.latitude  ,'longitude':pointB.longitude})
+    )
+};
+
+var compromiseDistance = function(pointA, pointB){
+  return (haversineDistance(pointA, pointB) + taxiDistance(pointA, pointB))/2
+};
+console.log('wtf');
+
+var bikeIcon = L.icon({iconUrl:'icons/bicycle-24@2x.png',iconAnchor:   [22, 1],});
+var dockIcon = L.icon({iconUrl:'icons/prison-24@2x.png',iconAnchor:   [22, 1],});
+
+$.getJSON('http://anyorigin.com/get?url=http%3A//divvybikes.com/stations/json&callback=?', function(data)      {
+divvy_data = data.contents;
+var stations = divvy_data.stationBeanList;
+
+var map = L.map('map').setView([41.883173,-87.631227], 13);
+
+L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors| <a href = "https://data.cityofchicago.org/Health-Human-Services/Food-Inspections/4ijn-s7e5">Chicago Data Portal</a> |<a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">'
+}).addTo(map);
+
+var user_marker=L.marker([41.883173,-87.631227]).addTo(map);
+user_marker.bindPopup('Please Provide Your Location').openPopup();
+
+map.locate({setView:true,maxZoom:16});
+
+map.on('locationfound',onLocate);
+map.on('locationerror',onLocateError);
+
+function onLocateError(e){
+console.log('locaterror');
+user_marker.setLatLng([41.841186,-87.64217]).addTo(map);
+user_marker.bindPopup('Default').openPopup();
+console.log(user_marker.getLatLng());
+map.setView([user_marker.getLatLng().lat,user_marker.getLatLng().lng],13);
+/*plot_stations();*/
+}
+
+function onLocate(e) {
+console.log('locate');
+user_marker.setLatLng(e.latlng).addTo(map);
+user_marker.bindPopup('Your Location').openPopup();
+/*plot_stations();*/
+var miles;
+
+    for(s in stations){
+        console.log(user_marker.getLatLng().lat,user_marker.getLatLng().lng );
+        /*console.log(compromiseDistance({,},{stations[s].latitude,stations[s].longitude}));*/
+        miles=compromiseDistance({'latitude':user_marker.getLatLng().lat,'longitude':user_marker.getLatLng().lng},stations[s]); 
+        console.log(miles);
+        if(miles<.5 && stations[s].availableBikes>0){
+          L.marker([stations[s].latitude,stations[s].longitude],{icon: bikeIcon}).addTo(map).bindPopup(stations[s].stationName);
+        }
+        else if((miles>1.5 && miles<3)&&stations[s].availableDocks>0){
+          L.marker([stations[s].latitude,stations[s].longitude],{icon: dockIcon}).addTo(map).bindPopup(stations[s].stationName);
+        }
+        
+    }
+}
+
+
+
+
+});
+/*
+for(r in i){
+    var i_date = new Date(i[r].inspection_date);
+    if(dba_name==i[r].dba_name){
+    text=text+"<br>"+i_date.toJSON().substring(0,10)+" "+i[r].results
+    }
+    else
+    {
+    dba_name=i[r].dba_name
+    text=(i_date.toJSON().substring(0,10))+" "+i[r].results
+    }
+    L.marker([i[r].latitude,i[r].longitude]).addTo(map).bindPopup(dba_name+"<br>"+text);
+    } 
+ */
+
+
+
+</script>
+</body>
+

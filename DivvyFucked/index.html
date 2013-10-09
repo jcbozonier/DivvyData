@@ -75,8 +75,7 @@
       $('#output #status').empty();
 
       $('#output #status').append("Current location: " + current_location.latitude + ', ' + current_location.longitude);
-      $.getJSON('http://anyorigin.com/get?url=http%3A//divvybikes.com/stations/json&callback=?', function(data)
-      {
+      $.getJSON('http://anyorigin.com/get?url=http%3A//divvybikes.com/stations/json&callback=?', function(data)      {
         divvy_data = data.contents;
         for(var index in divvy_data.stationBeanList){
           var station = divvy_data.stationBeanList[index];
