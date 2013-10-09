@@ -55,7 +55,7 @@ var compromiseDistance = function(pointA, pointB){
 console.log('wtf');
 
 var bikeIcon = L.icon({iconUrl:'icons/bicycle-24@2x.png',iconAnchor:   [22, 1],});
-var dockIcon = L.icon({iconUrl:'icons/prison-24@2x.png',iconAnchor:   [22, 1],});
+var dockIcon = L.icon({iconUrl:'icons/harbor-18@2x.png',iconAnchor:   [22, 1],});
 
 $.getJSON('http://anyorigin.com/get?url=http%3A//divvybikes.com/stations/json&callback=?', function(data)      {
 divvy_data = data.contents;
@@ -81,19 +81,27 @@ user_marker.setLatLng([41.841186,-87.64217]).addTo(map);
 user_marker.bindPopup('Default').openPopup();
 console.log(user_marker.getLatLng());
 map.setView([user_marker.getLatLng().lat,user_marker.getLatLng().lng],13);
-/*plot_stations();*/
+var miles;
+
+    for(s in stations){
+        miles=compromiseDistance({'latitude':user_marker.getLatLng().lat,'longitude':user_marker.getLatLng().lng},stations[s]); 
+        if(miles<.5 && stations[s].availableBikes>0){
+          L.marker([stations[s].latitude,stations[s].longitude],{icon: bikeIcon}).addTo(map).bindPopup(stations[s].stationName);
+        }
+        else if((miles>1.5 && miles<3)&&stations[s].availableDocks>0){
+          L.marker([stations[s].latitude,stations[s].longitude],{icon: dockIcon}).addTo(map).bindPopup(stations[s].stationName);
+        }
+        
+    }
 }
 
 function onLocate(e) {
 console.log('locate');
 user_marker.setLatLng(e.latlng).addTo(map);
 user_marker.bindPopup('Your Location').openPopup();
-/*plot_stations();*/
 var miles;
 
     for(s in stations){
-        console.log(user_marker.getLatLng().lat,user_marker.getLatLng().lng );
-        /*console.log(compromiseDistance({,},{stations[s].latitude,stations[s].longitude}));*/
         miles=compromiseDistance({'latitude':user_marker.getLatLng().lat,'longitude':user_marker.getLatLng().lng},stations[s]); 
         console.log(miles);
         if(miles<.5 && stations[s].availableBikes>0){
