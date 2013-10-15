@@ -3,10 +3,15 @@ import glob
 from datetime import datetime
 import csv
 
+counter = 0
 stations = {}
-for file_path in glob.glob("JustTheData/*.json"):
+for file_path in glob.glob("andys_data/*.json"):
+	counter += 1
+	#if counter > 1440:
+	#	break
+	print "Processing " + file_path + "..."
 	json_file = open(file_path)
-	json_text = json_file.read()
+	json_text = json_file.read().replace(" u'", "'").replace("{u'", "{'").replace("'", "\"").replace(": None", ": \"\"").replace(": False", ": 0").replace(": True", ": 1")
 	try:
 		minute_data = json.loads(json_text)
 	except:
@@ -29,18 +34,43 @@ for file_path in glob.glob("JustTheData/*.json"):
 		station_info = stations[key]
 		station_info['available_bikes'][event['availableBikes']] += 1
 		station_info['available_docks'][event['availableDocks']] += 1
-hours = [[0]*150 for i in range(0,24)]
+
+available_bikes_by_station = {}
+available_docks_by_station = {}
+
 for key in stations.keys():
+	station_id = key[0]
 	hour = key[2]
-	hours[hour] = map(lambda le_tuple: le_tuple[0] + le_tuple[1], zip(hours[hour], stations[key]['available_bikes']))
+	if not station_id in available_bikes_by_station:
+		available_bikes_by_station[station_id] = [[1]*150 for i in range(0,24)]
+	if not station_id in available_docks_by_station:
+		available_docks_by_station[station_id] = [[1]*150 for i in range(0,24)]
 
-hours_normalized = []
-for distribution in hours:
-	hours_normalized.append([(1.0*i)/sum(distribution) for i in distribution])
+	available_bikes_by_station[station_id][hour] = map(lambda le_tuple: le_tuple[0] + le_tuple[1], zip(available_bikes_by_station[station_id][hour], stations[key]['available_bikes']))
+	available_docks_by_station[station_id][hour] = map(lambda le_tuple: le_tuple[0] + le_tuple[1], zip(available_docks_by_station[station_id][hour], stations[key]['available_docks']))
+station_bikes = []
+station_docks = []
+for station_id in available_bikes_by_station.keys():
+	bike_available_hours = available_bikes_by_station[station_id]
+	dock_available_hours = available_docks_by_station[station_id]
+	for hour in xrange(0,24):
+		bike_available_distribution = bike_available_hours[hour]
+		dock_available_distribution = dock_available_hours[hour]
+		hours_for_bikes_normalized = [(1.0*i)/sum(bike_available_distribution) for i in bike_available_distribution]
+		station_bikes_hour = [station_id, hour]
+		station_bikes_hour.extend(hours_for_bikes_normalized)
+		station_bikes.append(station_bikes_hour)
+		hours_for_docks_normalized = [(1.0*i)/sum(dock_available_distribution) for i in dock_available_distribution]
+		station_docks_hour = [station_id, hour]
+		station_docks_hour.extend(hours_for_docks_normalized)
+		station_docks.append(station_docks_hour)
 
-with open('hour_distributions.csv', 'w') as f: 
+with open('hour_bike_distributions.csv', 'w') as f: 
 	writer = csv.writer(f)
-	writer.writerows(hours_normalized)
+	writer.writerows(station_bikes)
+with open('hour_dock_distributions.csv', 'w') as f: 
+	writer = csv.writer(f)
+	writer.writerows(station_docks)
 
 #station_info_for_csv = [{'station_id': item[0][0], 'weekend': item[0][1], 'hour':item[0][2], 'available_bikes':item[1]['available_bikes'], 'available_docks':item[1]['available_docks']} for item in stations.items()]
 
