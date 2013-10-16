@@ -11,15 +11,8 @@
  <div id="map" style="height:100%"></div>
 
 <script>
-/*function httpGet(theUrl)
-{
 
-var xmlHttp = null;
-xmlHttp = new XMLHttpRequest();
-xmlHttp.open( "GET", theUrl,false );
-//xmlHttp.send( null );
-return xmlHttp.responseText;
-}*/
+
 var to_radians = function(number){
       return number * Math.PI / 180;
     };
@@ -54,10 +47,16 @@ var compromiseDistance = function(pointA, pointB){
 };
 console.log('wtf');
 
+var bikeProb = function(id){
+
+}
+
 var bikeIcon = L.icon({iconUrl:'icons/bicycle-24@2x.png',iconAnchor:   [22, 1],});
 var dockIcon = L.icon({iconUrl:'icons/harbor-18@2x.png',iconAnchor:   [22, 1],});
 
 $.getJSON('http://anyorigin.com/get?url=http%3A//divvybikes.com/stations/json&callback=?', function(data)      {
+$.getJSON('http://0.0.0.0:8000/dock_availability_by_station_hour.json',function(prior_dock_data){
+$.getJSON('http://0.0.0.0:8000/bike_availability_by_station_hour.json',function(prior_bike_data){
 divvy_data = data.contents;
 var stations = divvy_data.stationBeanList;
 
@@ -103,20 +102,19 @@ var miles;
 
     for(s in stations){
         miles=compromiseDistance({'latitude':user_marker.getLatLng().lat,'longitude':user_marker.getLatLng().lng},stations[s]); 
-        console.log(miles);
+        console.log(stations[s]);
         if(miles<.5 && stations[s].availableBikes>0){
-          L.marker([stations[s].latitude,stations[s].longitude],{icon: bikeIcon}).addTo(map).bindPopup(stations[s].stationName);
+          L.marker([stations[s].latitude,stations[s].longitude],{icon: bikeIcon}).addTo(map).bindPopup(stations[s].stationName+'<br>'+'Bikes: '+stations[s].availableBikes);
         }
-        else if((miles>1.5 && miles<3)&&stations[s].availableDocks>0){
-          L.marker([stations[s].latitude,stations[s].longitude],{icon: dockIcon}).addTo(map).bindPopup(stations[s].stationName);
+        else if((miles>1.0 && miles<5)&&stations[s].availableDocks>0){
+          L.marker([stations[s].latitude,stations[s].longitude],{icon: dockIcon}).addTo(map).bindPopup(stations[s].stationName+'<br>'+'Docks: '+stations[s].availableDocks);
         }
         
     }
 }
 
-
-
-
+});
+});
 });
 /*
 for(r in i){
