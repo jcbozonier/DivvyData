@@ -47,8 +47,8 @@ var compromiseDistance = function(pointA, pointB){
 };
 console.log('wtf');
 
-var bikeProb = function(id){
-
+var getProb = function(id,table){
+console.log(table)
 }
 
 var bikeIcon = L.icon({iconUrl:'icons/bicycle-24@2x.png',iconAnchor:   [22, 1],});
@@ -102,7 +102,7 @@ var miles;
 
     for(s in stations){
         miles=compromiseDistance({'latitude':user_marker.getLatLng().lat,'longitude':user_marker.getLatLng().lng},stations[s]); 
-        console.log(stations[s]);
+        console.log(getProb(stations[s].id,prior_bike_data));
         if(miles<.5 && stations[s].availableBikes>0){
           L.marker([stations[s].latitude,stations[s].longitude],{icon: bikeIcon}).addTo(map).bindPopup(stations[s].stationName+'<br>'+'Bikes: '+stations[s].availableBikes);
         }
