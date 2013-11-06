@@ -1,11 +1,11 @@
 import json
 import glob
-from datetime import datetime
 import csv
+import datetime
 
 counter = 0
 stations = {}
-for file_path in glob.glob("andys_data/*.json"):
+for file_path in glob.glob("../LargeSampleData/DivvyDataSample/*.json"):
 	counter += 1
 	#if counter > 1440:
 	#	break
@@ -18,7 +18,7 @@ for file_path in glob.glob("andys_data/*.json"):
 		print "Errored on " + file_path
 		continue
 	time_text = minute_data['executionTime']
-	event_time = datetime.strptime(time_text, '%Y-%m-%d %I:%M:%S %p')
+	event_time = datetime.datetime.strptime(time_text, '%Y-%m-%d %I:%M:%S %p')
 	events = minute_data['stationBeanList']
 	for event in events:
 		station_id = event["id"]
@@ -65,13 +65,39 @@ for station_id in available_bikes_by_station.keys():
 		station_docks_hour.extend(hours_for_docks_normalized)
 		station_docks.append(station_docks_hour)
 
-with open('bike_availability_by_station_hour.csv', 'w') as f: 
-	writer = csv.writer(f)
-	writer.writerows(station_bikes)
-with open('bike_availability_by_station_hour.json', 'w') as f: 
-	json.dump(station_bikes, f)
-with open('dock_availability_by_station_hour.json', 'w') as f: 
-	json.dump(station_docks, f)
+def convert_to_andys_religion(raw_data):
+	andys_fantasy_data = {}
+	for row in raw_data:
+		the_hour = row[1]
+		if not the_hour in andys_fantasy_data:
+			andys_fantasy_data[the_hour] = {
+				'hour': the_hour,
+				'stations': []
+			}
+		stations_for_hour = andys_fantasy_data[the_hour]['stations']
+		stations_for_hour.append({
+				'station_id': row[0],
+				'availability': row[2:]
+			})
+	return andys_fantasy_data
+
+
+ideal_dock_format = convert_to_andys_religion(station_docks)
+ideal_bike_format = convert_to_andys_religion(station_bikes)
+
+date_text = datetime.datetime.now().strftime("%Y_%m_%d")
+with open('dock_availability_' + date_text + '.json', 'w') as f: 
+	json.dump(ideal_dock_format, f)
+with open('bike_availability_' + date_text + '.json', 'w') as f: 
+	json.dump(ideal_bike_format, f)
+
+#with open('bike_availability_by_station_hour.csv', 'w') as f: 
+#	writer = csv.writer(f)
+#	writer.writerows(station_bikes)
+#with open('bike_availability_by_station_hour.json', 'w') as f: 
+#	json.dump(station_bikes, f)
+#with open('dock_availability_by_station_hour.json', 'w') as f: 
+#	json.dump(station_docks, f)
 
 #station_info_for_csv = [{'station_id': item[0][0], 'weekend': item[0][1], 'hour':item[0][2], 'available_bikes':item[1]['available_bikes'], 'available_docks':item[1]['available_docks']} for item in stations.items()]
 
